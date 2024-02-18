@@ -15,7 +15,7 @@ export default eventModule({
   name: "guildMemberAdd",
   execute: async (member) => {
     // Returning if development mode.
-    if (Bun.env.NODE_ENV === "development") return;
+    // if (Bun.env.NODE_ENV === "development") return;
     // Returning if not Statville.
     if (member.guild.id !== Bun.env.STATVILLE_GUILD_ID) return;
 
@@ -33,7 +33,7 @@ export default eventModule({
 async function addRoles(member: GuildMember) {
   // Finding the guild doc.
   const guildDoc = await guildModel.findOne({
-    _id: member.guild.id,
+    id: member.guild.id,
   });
   // todo: potentually implement a cache here
 

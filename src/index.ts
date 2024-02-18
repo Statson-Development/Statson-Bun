@@ -2,7 +2,7 @@ import { Bot } from "neos-handler";
 
 const bot = await Bot.new({
   clientOptions: {
-    intents: ["Guilds", "GuildMessages", "MessageContent"],
+    intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers"],
   },
   moduleDirs: {
     commands: 'src/modules/commands',
