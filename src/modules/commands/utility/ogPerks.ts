@@ -20,11 +20,11 @@ export default commandModule({
       Bun.env.OLD_STATVILLE_GUILD_ID
     );
 
-    // Fetching member.
-    const member = await oldStatville.members.fetch(interaction.user.id);
-
-    // Checking.
-    if (!member) {
+    // Checking if member is og.
+    try {
+      await oldStatville.members.fetch(interaction.user.id);
+    } catch (e) {
+      // Error because member did not exist.
       return interaction.editReply({
         content: "I have just double checked, and you are not an OG member 😔.",
       });
@@ -36,7 +36,7 @@ export default commandModule({
     );
 
     // Getting userdoc from db.
-    const userDoc = await userModel.findOne({id: interaction.user.id});
+    const userDoc = await userModel.findOne({ id: interaction.user.id });
 
     // Returning if already og.
     if (userDoc?.receivedOgPerks) {
@@ -44,7 +44,6 @@ export default commandModule({
         content: "You are already an OG member 🎉!",
       });
     }
-
 
     // Adding money.
     await userModel.findOneAndUpdate(
