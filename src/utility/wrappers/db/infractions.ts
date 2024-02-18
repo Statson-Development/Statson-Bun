@@ -11,7 +11,7 @@ import {
 } from "discord.js";
 import EmbedBuilder from "#utility/templates/embeds/default";
 import LogUtils from "#utility/wrappers/discord/loggers";
-import capitalizeFirstLetter from "#utility/functions/formatting/capitalize";
+import capitalizeFirstLetter from "#utility/functions/formatting/capitalizeFirstLetter";
 import dateToUnixSeconds from "#utility/functions/formatting/dateToUnixSeconds";
 import InfractionUtils from "#utility/wrappers/db/infractions";
 

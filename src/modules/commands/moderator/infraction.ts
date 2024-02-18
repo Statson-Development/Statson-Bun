@@ -16,13 +16,13 @@ import {
 import { commandModule } from "neos-handler";
 import { readFileSync } from "fs";
 import { InfractionPunishment } from "src/typescript/enums/InfractionPunishment";
-import capitalize from "#utility/functions/formatting/capitalize";
+import capitalize from "#utility/functions/formatting/capitalizeFirstLetter";
 import infractionModel, { Infraction, type OmitLogLinkInfraction } from "#utility/schemas/infraction.model";
 import InfractionUtils from "#utility/wrappers/db/infractions";
 import LogUtils from "#utility/wrappers/discord/loggers";
 import EmbedBuilder from "#utility/templates/embeds/default";
 import convertHumanReadableTimeToMilliseconds from "#utility/functions/formatting/convertHumanReadableToMs";
-import capitalizeFirstLetter from "#utility/functions/formatting/capitalize";
+import capitalizeFirstLetter from "#utility/functions/formatting/capitalizeFirstLetter";
 import { Types } from "mongoose";
 
 export default commandModule({
