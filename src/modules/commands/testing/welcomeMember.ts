@@ -27,12 +27,12 @@ export default commandModule({
     const member = (interaction.options.getMember("user") ||
       interaction.member) as GuildMember;
 
-    // Calling the welcome member func.
-    await welcomeMember(member);
+    // Emitting the event.
+    interaction.client.emit("guildMemberAdd", member);
 
     // Responding.
     await interaction.reply({
-      content: `Sent in <#${Bun.env.STATVILLE_GENERAL_CHANNEL_ID}>!`,
+      content: `Welcomed ${member}!`,
       ephemeral: true,
     });
   },
