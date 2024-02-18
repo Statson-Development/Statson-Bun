@@ -1,3 +1,0 @@
-declare 'gl {
-    namespace ''
-}

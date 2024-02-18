@@ -1,0 +1,1 @@
+["Hateful Content", "TOS Violation", "NSFW/Inappropriate Content", "Discrimination & Harassment", "Religious Disrespect", "Political Misconduct", "Toxic Behavior", "Spamming", "Instigation", "Sensitive/Illegal Sharing", "Uncited Reference", "False Information", "Self Promotion", "Excessive Caps", "Impersonation", "Doxing or Privacy Breach"]
