@@ -1,5 +1,4 @@
 import ErrorEmbed from "#utility/templates/embeds/error";
-import { codeBlock } from "discord.js";
 import { eventModule } from "neos-handler";
 
 export default eventModule({
@@ -10,6 +9,9 @@ export default eventModule({
     const embed = new ErrorEmbed().setDescription(
       `\`\`\`${payload.moduleError.message}\`\`\``
     );
+
+    // Logging the error.
+    console.error(payload.moduleError);
 
     // Attempting to reply.
     try {
@@ -40,8 +42,5 @@ export default eventModule({
     } catch (e) {
       // We are also catching any errors but not doing anything with them.
     }
-
-    // Logging the error.
-    console.error(payload.moduleError);
   },
 });
