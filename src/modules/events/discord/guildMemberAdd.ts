@@ -91,11 +91,13 @@ async function addOgMemberPerks(member: GuildMember) {
   // Returning if the old server does not exist.
   if (!oldStatville) return;
 
-  // Getting the old member.
-  const oldMember = await oldStatville.members.fetch(member.id);
-
-  // Returning if not og.
-  if (!oldMember) return;
+  // Checking member exists in old server.
+  try {
+    await oldStatville.members.fetch(member.id);
+  } catch (e) {
+    // If an error occurs that means the member just doesn't exist so we return.
+    return;
+  }
 
   // Now fetching doc to see if perks have already been given.
   const userDoc = await userModel.findOne({
