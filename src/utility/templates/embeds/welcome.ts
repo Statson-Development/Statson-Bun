@@ -1,5 +1,7 @@
 import type { GuildMember } from "discord.js";
 import EmbedBuilder from "./default";
+import random from "#utility/functions/helper/random";
+import config from "#config";
 
 export default class WelcomeEmbed extends EmbedBuilder {
   constructor(member: GuildMember) {
@@ -26,8 +28,6 @@ export default class WelcomeEmbed extends EmbedBuilder {
         `${member}, just joined. Be sure to give them a 🌟 **Warm "Welcome"** 🌟!`
       )
       .setThumbnail(member.displayAvatarURL())
-      .setImage(
-        "https://cdn.discordapp.com/attachments/1131555138541199472/1147028981548318730/welcome-banner.jpg"
-      );
+      .setImage(random(config.urls.images.welcome));
   }
 }

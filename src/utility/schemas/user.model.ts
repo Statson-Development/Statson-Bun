@@ -1,7 +1,7 @@
 import type { GuildMember as DjsMember, User as DjsUser } from "discord.js";
 import { Infraction } from "./infraction.model";
 import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
-import { Container } from "neos-container";
+import config from "#config"
 
 @modelOptions({
   schemaOptions: {
@@ -16,7 +16,7 @@ export class User {
   @prop({
     type: Number,
     required: true,
-    default: Bun.env.DEFAULT_STARTING_BALANCE,
+    default: config.other.default_starting_balance,
     min: 0,
   })
   money!: number;

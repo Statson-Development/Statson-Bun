@@ -1,6 +1,7 @@
-import userModel from "#utility/schemas/user.model";
 import type { GuildMember } from "discord.js";
+import userModel from "#utility/schemas/user.model";
 import { commandModule } from "neos-handler";
+import config from "#config";
 
 export default commandModule({
   name: "ogperks",
@@ -17,7 +18,7 @@ export default commandModule({
 
     // Fetching old server.
     const oldStatville = await interaction.client.guilds.fetch(
-      Bun.env.OLD_STATVILLE_GUILD_ID
+      config.ids.guilds.old_statville
     );
 
     // Checking if member is og.
@@ -42,7 +43,7 @@ export default commandModule({
 
     // Adding og roles.
     await (interaction.member as GuildMember).roles.add(
-      Bun.env.STATVILLE_OG_MEMBER_ROLE_ID
+      config.ids.roles.statville_og_member
     );
 
     // Adding money.

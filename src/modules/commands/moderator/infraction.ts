@@ -9,20 +9,17 @@ import {
   ChatInputCommandInteraction,
   TextInputStyle,
   ModalSubmitInteraction,
-  type Interaction,
-  type CacheType,
-  type APIEmbed,
 } from "discord.js";
 import { commandModule } from "neos-handler";
 import { readFileSync } from "fs";
 import { InfractionPunishment } from "src/typescript/enums/InfractionPunishment";
 import capitalize from "#utility/functions/formatting/capitalizeFirstLetter";
-import infractionModel, { Infraction, type OmitLogLinkInfraction } from "#utility/schemas/infraction.model";
+import {
+  Infraction,
+  type OmitLogLinkInfraction,
+} from "#utility/schemas/infraction.model";
 import InfractionUtils from "#utility/wrappers/db/infractions";
-import LogUtils from "#utility/wrappers/discord/loggers";
-import EmbedBuilder from "#utility/templates/embeds/default";
 import convertHumanReadableTimeToMilliseconds from "#utility/functions/formatting/convertHumanReadableToMs";
-import capitalizeFirstLetter from "#utility/functions/formatting/capitalizeFirstLetter";
 import { Types } from "mongoose";
 
 export default commandModule({
@@ -152,47 +149,38 @@ export default commandModule({
 
         // All interactions have been deferred here -----------------------------
 
-        const date =new Date()
-        let infraction: Infraction | OmitLogLinkInfraction =
-          {
-            _id: new Types.ObjectId(),
-            modId: interaction.user.id,
-            userId: member.id,
-            channelId: channel.id,
-            punishment: punishment
-              ? {
-                  penalty: punishment as InfractionPunishment,
-                  duration: durationReq?.duration || undefined,
-                }
-              : undefined,
-            notes: notes || undefined,
-            reason: reason || undefined,
-            relatedMessageLink: message || undefined,
-            createdAt: date,
-            updatedAt: new Date(),
-          };
-          console.log(date)
+        const date = new Date();
+        let infraction: Infraction | OmitLogLinkInfraction = {
+          _id: new Types.ObjectId(),
+          modId: interaction.user.id,
+          userId: member.id,
+          channelId: channel.id,
+          punishment: punishment
+            ? {
+                penalty: punishment as InfractionPunishment,
+                duration: durationReq?.duration || undefined,
+              }
+            : undefined,
+          notes: notes || undefined,
+          reason: reason || undefined,
+          relatedMessageLink: message || undefined,
+          createdAt: date,
+          updatedAt: new Date(),
+        };
 
         // Administering.
-        await InfractionUtils.administerInfraction(member, infraction as Infraction);
-
-        // Using followUp() so that we can respond if the punishment is temp (and modal was used).
-        await interaction.followUp(
-          "Test alpha 22.4 successful, please continue."
+        await InfractionUtils.administerInfraction(
+          member,
+          infraction as Infraction
         );
 
-        // Creating the document.
-        // const infractionDoc = await Infraction.new({
-        //   userId: interaction.options.getUser("user", true).id,
-        //   modId: interaction.user.id,
-        //   punishment:
-        //     { penalty: interaction.options.getString("punishment") } ||
-        //     undefined,
-        //   reason:
-        //     interaction.options.getString("reason") || "No reason provided.",
-        //   channelId: interaction.options.getChannel("channel")?.id,
-        //   notes: interaction.options.getString("notes"),
-        // });
+        // Using followUp() so that we can respond if the punishment is temp (and modal was used).
+        await interaction.followUp({
+          embeds: [],
+        });
+
+        // todo: once this is finished we need to do the other sub commands. 
+        // todo: also need to do the text select command or whatever its caleled where you right click the message.
         break;
       }
     }

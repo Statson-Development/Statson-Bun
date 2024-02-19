@@ -1,0 +1,35 @@
+{
+  "ids": {
+    "guilds": {
+      "statville": "1197408857824170044",
+      "old_statville": "1114961521475334195"
+    },
+    "channels": {
+      "statville_general": "1197408859027935259",
+      "statville_ideas_forum": "1197410694455369769"
+    },
+    "emojis/stickers": {
+      "statville_welcome": "1208196536366931999"
+    },
+    "roles": {
+      "statville_og_member": "1197408857895481355"
+    }
+  },
+  "urls": {
+    "images": {
+      "welcome": [
+        "https://cdn.discordapp.com/attachments/1187319737957486613/1208963998385438770/StatVille.png?ex=65e53276&is=65d2bd76&hm=ca48e649db6b207d836b19f9fae499431b515e64a6d508a7359f32083635ca99&",
+        "https://cdn.discordapp.com/attachments/1131555138541199472/1147028981548318730/welcome-banner.jpg"
+      ]
+    }
+  },
+  "emojis": {
+    "info": "<:info:1208944824737071165>",
+    "currency": "<:Statcoin:1205003663412695071>"
+  },
+  "other": {
+    "currency_name": "Statcoin",
+    "default_embed_color": "#13798a",
+    "default_starting_balance": 2000
+  }
+}

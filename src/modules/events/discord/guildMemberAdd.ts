@@ -1,9 +1,10 @@
+import type { GuildMember, GuildTextBasedChannel } from "discord.js";
 import Queuer from "#utility/classes/Queuer";
 import guildModel from "#utility/schemas/guild.model";
 import userModel from "#utility/schemas/user.model";
 import WelcomeEmbed from "#utility/templates/embeds/welcome";
-import type { GuildMember, GuildTextBasedChannel } from "discord.js";
 import { eventModule } from "neos-handler";
+import config from '#config'
 
 /**
  * The queuer for the welcome message.
@@ -20,7 +21,7 @@ export default eventModule({
     if (member.guild.id !== Bun.env.STATVILLE_GUILD_ID) return;
 
     // Sending the welcome message.
-    await welcomeMember(member);
+    welcomeMember(member);
 
     // Add roles.
     await addRoles(member);
@@ -45,11 +46,9 @@ async function addRoles(member: GuildMember) {
   }
 }
 
-export async function welcomeMember(member: GuildMember) {
+export function welcomeMember(member: GuildMember) {
   // Fetching general channel.
-  const generalChannel = member.guild.channels.cache.get(
-    Bun.env.STATVILLE_GENERAL_CHANNEL_ID
-  ) as GuildTextBasedChannel;
+  const generalChannel = member.guild.channels.cache.get(config.ids.channels.statville_general) as GuildTextBasedChannel;
 
   // Returning if channel exists. We can skip this member welcome.
   if (!generalChannel) return;
@@ -68,7 +67,7 @@ export async function welcomeMember(member: GuildMember) {
         time: 300_000,
         filter: (message) =>
           message.content.toLowerCase().includes("welcome") ||
-          message.stickers.has(Bun.env.STATVILLE_WELCOME_STICKER_ID),
+          message.stickers.has(config.ids["emojis/stickers"].statville_welcome),
       })
       .on("collect", async (message) => {
         await message.react("🌟");
@@ -85,7 +84,7 @@ const ogMemberMoney = 25000;
 async function addOgMemberPerks(member: GuildMember) {
   // First getting the original server.
   const oldStatville = await member.client.guilds.fetch(
-    Bun.env.OLD_STATVILLE_GUILD_ID
+    config.ids.guilds.old_statville
   );
 
   // Returning if the old server does not exist.
@@ -107,7 +106,7 @@ async function addOgMemberPerks(member: GuildMember) {
   if (userDoc?.receivedOgPerks) return;
 
   // Adding the perks.
-  await member.roles.add(Bun.env.STATVILLE_OG_MEMBER_ROLE_ID);
+  await member.roles.add(config.ids.roles.statville_og_member);
   if (userDoc) {
     userDoc.receivedOgPerks = true;
     userDoc.money += ogMemberMoney;
@@ -115,7 +114,7 @@ async function addOgMemberPerks(member: GuildMember) {
   } else {
     await new userModel({
       id: member.id,
-      money: Bun.env.DEFAULT_STARTING_BALANCE + ogMemberMoney,
+      money: config.other.default_starting_balance + ogMemberMoney,
       receivedOgPerks: true,
     }).save();
   }

@@ -1,5 +1,6 @@
 import type { GuildMember, User } from "discord.js";
 import { Container } from "neos-container";
+import config from "#config";
 
 /**
  *
@@ -19,9 +20,7 @@ export default async function resolveUserToMember(
   }
 
   // Resolving the guild.
-  const guild = await client.guilds.fetch(
-    guildId || Bun.env.STATVILLE_GUILD_ID
-  );
+  const guild = await client.guilds.fetch(config.ids.guilds.statville);
 
   // Ensuring guild existence.
   if (!guild) {
@@ -29,5 +28,5 @@ export default async function resolveUserToMember(
   }
 
   // Resolving the member.
-  return (await guild.members.fetch(user.id)) || null;
+  return (await guild.members.fetch(user.id)) || null; // todo: this will throw error if not come
 }

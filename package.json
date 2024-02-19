@@ -26,6 +26,9 @@
   "imports": {
     "#utility/*": [
       "./src/utility/*"
+    ],
+    "#config": [
+      "./config.jsonc"
     ]
   }
 }
