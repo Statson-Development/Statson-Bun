@@ -10,7 +10,7 @@ import {
   type CacheType,
 } from "discord.js";
 import EmbedBuilder from "#utility/templates/embeds/default";
-import LogUtils from "#utility/wrappers/discord/loggers";
+import LogUtils, { LogLocation } from "#utility/wrappers/discord/loggers";
 import capitalizeFirstLetter from "#utility/functions/formatting/capitalizeFirstLetter";
 import dateToUnixSeconds from "#utility/functions/formatting/dateToUnixSeconds";
 import InfractionUtils from "#utility/wrappers/db/infractions";
@@ -47,41 +47,46 @@ async function changeInfractionPunishment(
     punishment: newPunishment,
   });
 
-  // todo: have this log.
+  // Logging.
+  const log = await LogUtils.log(LogLocation.INFRACTIONS, {
+    reply: {
+      messageReference: infractionDoc.logLink,
+      failIfNotExists: false,
+    },
+    embeds: [newInfractionChangePunishmentEmbed(member, infractionDoc)],
+  });
 
-  // COMMENTED OUT TO STOP ERRORS. THIS FUNCTION IS NOW UNUSABLE.
+  if (infractionDoc.punishment) {
+    // Setting old punishment as historical.
+    if (infractionDoc.historicalPunishments) {
+      infractionDoc.historicalPunishments.push({
+        changedById: moderatorId,
+        historicalAt: new Date(),
+        penalty: infractionDoc.punishment.penalty,
+        duration: infractionDoc.punishment.duration,
+        logLink: log.url,
+      });
+    }
 
-  // if (infractionDoc.punishment) {
-  //   // Setting old punishment as historical.
-  //   if (infractionDoc.historicalPunishments) {
-  //     infractionDoc.historicalPunishments.push({
-  //       changedById: moderatorId,
-  //       historicalAt: new Date(),
-  //       penalty: infractionDoc.punishment.penalty,
-  //       duration: infractionDoc.punishment.duration,
-  //       logLink,
-  //     });
-  //   }
+    // Removing old punishment from discord.
+    await punishmentDistributor.removePunishment(member);
+  }
 
-  //   // Removing old punishment from discord.
-  //   await punishmentDistributor.removePunishment(member);
-  // }
+  if (newPunishment) {
+    // Setting punishment on doc.
+    infractionDoc.punishment = newPunishment;
 
-  // if (newPunishment) {
-  //   // Setting punishment on doc.
-  //   infractionDoc.punishment = newPunishment;
+    // Administering with discord.
+    punishmentDistributor.setInfraction({
+      reason: infractionDoc.reason!,
+      punishment: newPunishment,
+      userId: infractionDoc.userId,
+    }); // todo: we may not need to do this as i beileve js will reference the doc and changed will then sync.
+    await punishmentDistributor.administerPunishment(member);
+  }
 
-  //   // Administering with discord.
-  //   punishmentDistributor.setInfraction({
-  //     reason: infractionDoc.reason!,
-  //     punishment: newPunishment,
-  //     userId: infractionDoc.userId,
-  //   }); // todo: we may not need to do this as i beileve js will reference the doc and changed will then sync.
-  //   await punishmentDistributor.administerPunishment(member);
-  // }
-
-  // // Saving.
-  // await infractionDoc.save();
+  // Saving.
+  await infractionDoc.save();
 }
 
 async function administerInfraction(
@@ -147,6 +152,17 @@ async function removeInfraction(member: GuildMember, infractionId: string) {
 
   // Deleting in database.
   await infractionDoc.deleteOne();
+}
+
+// todo: move everything below to its own file.
+
+function newInfractionChangePunishmentEmbed(
+  affectedMember: GuildMember,
+  infraction: Infraction
+) {
+  return new EmbedBuilder(affectedMember).setDescription(
+    `${Bun.env.INFO_EMOJI} - ${affectedMember}'s infraction punishment has been changed to a \`${infraction.punishment}\``
+  );
 }
 
 /**
