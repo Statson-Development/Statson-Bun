@@ -1,7 +1,7 @@
 import type { GuildTextBasedChannel, MessageCreateOptions } from "discord.js";
 import { Bot } from "neos-handler";
 
-enum LogLocation {
+export enum LogLocation {
     STAFF = "1197408858390401051",
     INFRACTIONS = "1197408858809839685"
 }
