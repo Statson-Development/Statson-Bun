@@ -30,11 +30,6 @@ export default commandModule({
       });
     }
 
-    // Adding og roles.
-    await (interaction.member as GuildMember).roles.add(
-      Bun.env.STATVILLE_OG_MEMBER_ROLE_ID
-    );
-
     // Getting userdoc from db.
     const userDoc = await userModel.findOne({ id: interaction.user.id });
 
@@ -44,6 +39,11 @@ export default commandModule({
         content: "You are already an OG member 🎉!",
       });
     }
+
+    // Adding og roles.
+    await (interaction.member as GuildMember).roles.add(
+      Bun.env.STATVILLE_OG_MEMBER_ROLE_ID
+    );
 
     // Adding money.
     await userModel.findOneAndUpdate(
