@@ -28,7 +28,11 @@ export class GuildOptions {
   }
 })
 export class Guild {
-  @prop()
+  @prop({
+    ...discordId,
+    immutable: false,
+    maxlength: 19 // Guild ids can be longer.
+  })
   id!: string;
 
   @prop({

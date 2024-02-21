@@ -1,7 +1,6 @@
-import type { GuildMember as DjsMember, User as DjsUser } from "discord.js";
-import { Infraction } from "./infraction.model";
 import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 import config from "#config"
+import { discordId } from "#utility/schemas/types/discordId";
 
 @modelOptions({
   schemaOptions: {
@@ -10,7 +9,7 @@ import config from "#config"
   },
 })
 export class User {
-  @prop()
+  @prop(discordId)
   id!: string;
 
   @prop({
