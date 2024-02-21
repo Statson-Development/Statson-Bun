@@ -20,6 +20,11 @@ export default commandModule({
           type: ApplicationCommandOptionType.String,
           required: true,
         },
+        {
+          name: "author",
+          description: "The author of the quote 🧑.",
+          type: ApplicationCommandOptionType.User,
+        },
       ],
     },
     {
@@ -43,10 +48,14 @@ export default commandModule({
     // Switching through sub cmds.
     switch (interaction.options.getSubcommand()) {
       case "create": {
+        // Getting author.
+        const author =
+          interaction.options.getUser("author") || interaction.user;
+
         // Adding the quote to the database.
         try {
           await quoteModel.create({
-            authorId: interaction.user.id,
+            authorId: author.id,
             content,
           });
         } catch (e) {
