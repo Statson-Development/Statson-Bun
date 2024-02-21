@@ -5,9 +5,11 @@ import {
   type APIEmbedField,
   type EmbedFooterOptions,
   type RestOrArray,
+  type ColorResolvable,
   GuildMember,
   User,
 } from "discord.js";
+import config from "#config";
 
 /**
  * The default embed builder for the bot.
@@ -23,7 +25,7 @@ export default class EmbedBuilder extends DjsEmbedBuilder {
     super();
 
     // Setting color.
-    this.setColor(Bun.env.DEFAULT_EMBED_COLOR);
+    this.setColor(config.other.default_embed_color as ColorResolvable);
 
     // Setting author if provided.
     if (person) {
