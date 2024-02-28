@@ -21,7 +21,7 @@
     "ansi-colors": "^4.1.3",
     "discord.js": "^14.14.1",
     "mongoose": "^8.1.1",
-    "neos-handler": "^3.3.2"
+    "neos-handler": "3.4.4"
   },
   "imports": {
     "#utility/*": [
