@@ -1,3 +1,4 @@
+import includedPluginDefaultResponses from "#utility/templates/other/IncludedPluginDefaultResponses";
 import { Bot } from "neos-handler";
 
 const bot = await Bot.new({
@@ -5,9 +6,15 @@ const bot = await Bot.new({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers"],
   },
   moduleDirs: {
-    commands: 'src/modules/commands',
-    events: 'src/modules/events',
-    services: 'src/modules/services'
+    commands: "src/modules/commands",
+    events: "src/modules/events",
+    services: "src/modules/services",
+  },
+  botOptions: {
+    pluginOptions: {
+      rejectNonCachedInteractionGuilds: true,
+      includedPluginResponses: includedPluginDefaultResponses,
+    },
   },
 });
 

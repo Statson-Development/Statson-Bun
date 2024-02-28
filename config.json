@@ -6,7 +6,7 @@
     },
     "channels": {
       "statville_general": "1197408859027935259",
-      "statville_ideas_forum": "1197410694455369769"
+      "statville_ideas_forum": "1209688905197297674"
     },
     "emojis/stickers": {
       "statville_welcome": "1208196536366931999"
@@ -29,6 +29,26 @@
   "emojis": {
     "info": "<:info:1208944824737071165>",
     "currency": "<:Statcoin:1205003663412695071>"
+  },
+  "responses": {
+    "on_cooldown": [
+      "Hold on, your command is currently sipping ☕ on a cooldown break. Patience is a virtue! 😅",
+      "Oops, your command is napping 💤 on cooldown island. It'll wake up soon, promise! 😴",
+      "Your command is in a timeout corner ⏰ for a quick breather. Keep calm and command on! 😄",
+      "Commander, your command needs a vacation 🏖️ from all the action. It'll be back in a jiffy! 🌴",
+      "Command-o-matic is recharging 🔌, so your command has taken a coffee ☕ break. Hang tight! 😄",
+      "Uh-oh! Your command is in cooldown rehab 🧘‍♂️. It'll be back stronger and wiser! 🧙‍♂️",
+      "Your command is off on a space odyssey 🚀 to explore new horizons. It'll be back soon with cosmic wisdom! 🌌",
+      "Don't worry, your command is just practicing its stand-up comedy routine 🎤 during the cooldown. Get ready to laugh! 😂",
+      "Your command is currently mastering the art of invisibility 🕵️‍♂️ on a secret cooldown mission. It will reappear soon, as if by magic! 🎩✨",
+      "Your command is taking a short detour through the cooldown forest 🌳 for some fresh air. It'll emerge refreshed and ready to go! 🌲🚶‍♂️",
+      "Looks like your command is busy knitting 🧶 a cozy sweater on cooldown island. It'll be done in a stitch! 🧣",
+      "Your command is taking a quick dip 🏊 in the cooldown lagoon. It'll be back once it's done splashing around! 💦",
+      "Hang in there! Your command is on a cooldown quest 🗺️ seeking ancient wisdom. It'll return shortly with newfound knowledge! 📚",
+      "Oopsie daisy! Your command tripped into a cooldown rabbit hole 🐇. It's exploring Wonderland but will be back before tea time! 🍵",
+      "Your command is attending a cooldown concert 🎶 featuring the symphonies of Silence. It'll be back after the encore! 🎻",
+      "Shh! Your command is in a cooldown library 📖, studying the art of patience. It'll check out soon with insights to share! 🤫"
+    ]
   },
   "other": {
     "currency_name": "Statcoin",
