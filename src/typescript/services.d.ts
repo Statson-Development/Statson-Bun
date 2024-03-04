@@ -8,7 +8,7 @@ import type {
   LoggerLike,
 } from "neos-handler";
 import type MongoClient from "#utility/classes/MongoClient";
-import type CacheManager from "#utility/classes/CacheManager";
+import type Scheduler from "#utility/classes/Scheduler";
 
 export interface ServiceMapBase {
   "@internal/client": Client;
@@ -16,7 +16,7 @@ export interface ServiceMapBase {
   "@internal/moduleManager": ModuleManager;
   "@internal/cooldownManager": CooldownManager;
   "@internal/logger": LoggerLike;
-  CacheManager: CacheManager;
+  scheduler: Scheduler;
   database: MongoClient;
 }
 
