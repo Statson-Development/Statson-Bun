@@ -4,7 +4,7 @@ import guildModel from "#utility/schemas/guild.model";
 import userModel from "#utility/schemas/user.model";
 import WelcomeEmbed from "#utility/templates/embeds/welcome";
 import { eventModule } from "neos-handler";
-import config from '#config'
+import config from "#config";
 
 /**
  * The queuer for the welcome message.
@@ -19,6 +19,8 @@ export default eventModule({
     if (Bun.env.NODE_ENV === "development") return;
     // Returning if not Statville.
     if (member.guild.id !== Bun.env.STATVILLE_GUILD_ID) return;
+    // Returning if bot.
+    if (member.user.bot) return;
 
     // Sending the welcome message.
     welcomeMember(member);
@@ -48,7 +50,9 @@ async function addRoles(member: GuildMember) {
 
 export function welcomeMember(member: GuildMember) {
   // Fetching general channel.
-  const generalChannel = member.guild.channels.cache.get(config.ids.channels.statville_general) as GuildTextBasedChannel;
+  const generalChannel = member.guild.channels.cache.get(
+    config.ids.channels.statville_general
+  ) as GuildTextBasedChannel;
 
   // Returning if channel exists. We can skip this member welcome.
   if (!generalChannel) return;
@@ -67,7 +71,7 @@ export function welcomeMember(member: GuildMember) {
         time: 300_000,
         filter: (message) =>
           message.content.toLowerCase().includes("welcome") ||
-          message.stickers.has(config.ids["emojis/stickers"].statville_welcome),
+          message.stickers.has(config.ids.stickers.statville_welcome),
       })
       .on("collect", async (message) => {
         await message.react("🌟");
