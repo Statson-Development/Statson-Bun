@@ -1,10 +1,14 @@
 import quoteModel from "#utility/schemas/quote.model";
-import { ApplicationCommandOptionType } from "discord.js";
+import {
+  ApplicationCommandOptionType,
+  ApplicationCommandType,
+} from "discord.js";
 import { commandModule } from "neos-handler";
 
 export default commandModule({
   name: "quote",
   description: "Allows editing of quotes.",
+  type: ApplicationCommandType.ChatInput,
   userPermissions: {
     condition: ["Administrator"],
   },

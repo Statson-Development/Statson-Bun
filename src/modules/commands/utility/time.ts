@@ -1,11 +1,12 @@
 import timeModel, { Timezone } from "#utility/schemas/timezone.model";
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, ApplicationCommandType } from "discord.js";
 import { commandModule } from "neos-handler";
 import timezones from "../../../../autocomplete/timezones.json";
 
 export default commandModule({
   name: "time",
   description: "Manages time.",
+  type: ApplicationCommandType.ChatInput,
   options: [
     {
       name: "set",

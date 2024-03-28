@@ -2,6 +2,7 @@ import guildModel from "#utility/schemas/guild.model";
 import {
   ActionRowBuilder,
   ApplicationCommandOptionType,
+  ApplicationCommandType,
   ComponentType,
   RoleSelectMenuBuilder,
   RoleSelectMenuInteraction,
@@ -12,6 +13,7 @@ import { commandModule } from "neos-handler";
 export default commandModule({
   name: "welcomeroles",
   description: "Welcome roles",
+  type: ApplicationCommandType.ChatInput,
   guildOnly: {
     condition: true,
   },
