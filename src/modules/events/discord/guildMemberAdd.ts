@@ -1,10 +1,15 @@
-import type { GuildMember, GuildTextBasedChannel } from "discord.js";
+import {
+  ChannelType,
+  type GuildMember,
+  type GuildTextBasedChannel,
+} from "discord.js";
 import Queuer from "#utility/classes/Queuer";
 import guildModel from "#utility/schemas/guild.model";
 import userModel from "#utility/schemas/user.model";
 import WelcomeEmbed from "#utility/templates/embeds/welcome";
 import { eventModule } from "neos-handler";
 import config from "#config";
+import formatNumberAsShortString from "#utility/functions/formatting/formatNumberAsShortString";
 
 /**
  * The queuer for the welcome message.
@@ -30,8 +35,58 @@ export default eventModule({
 
     // Adding og member perks.
     await addOgMemberPerks(member);
+
+    // Update the member count.
+    await updateMemberCount(member);
   },
 });
+
+async function updateMemberCount(member: GuildMember) {
+  // Finding the guild doc.
+  const guildDoc = await guildModel.findOne({
+    id: member.guild.id,
+  });
+
+  // Creating the new channel name.
+  const newChannelName = `Statizens: ${formatNumberAsShortString(
+    member.guild.memberCount
+  )}`;
+
+  // Checking if a channel already exists.
+  if (!guildDoc?.options.memberCountChannelId) {
+    // Creating the channel.
+    await member.guild.channels.create({
+      name: newChannelName,
+      type: ChannelType.GuildVoice,
+      permissionOverwrites: [
+        {
+          id: member.guild.id,
+          deny: ["Connect"],
+        },
+      ],
+    });
+  } else {
+    // Updating the name.
+    await member.guild.channels.edit(guildDoc?.options.memberCountChannelId, {
+      name: newChannelName,
+    });
+  }
+
+  // Updating the guild doc.
+  await guildModel.findOneAndUpdate(
+    {
+      _id: member.guild.id,
+    },
+    // Using dot notation to update the nested field.
+    {
+      "options.memberCountChannelId": newChannelName,
+    },
+    // Using upsert to create the doc if it doesn't exist.
+    {
+      upsert: true,
+    }
+  );
+}
 
 async function addRoles(member: GuildMember) {
   // Finding the guild doc.
