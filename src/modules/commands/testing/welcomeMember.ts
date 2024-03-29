@@ -1,6 +1,5 @@
 import { ApplicationCommandOptionType, GuildMember } from "discord.js";
 import { commandModule } from "neos-handler";
-import { welcomeMember } from "src/modules/events/discord/guildMemberAdd";
 
 export default commandModule({
   name: "welcomemember",
@@ -24,8 +23,7 @@ export default commandModule({
   ],
   execute: async (interaction) => {
     // Defining the member to welcome.
-    const member = (interaction.options.getMember("user") ||
-      interaction.member) as GuildMember;
+    const member = interaction.options.getMember("user") || interaction.member;
 
     // Emitting the event.
     interaction.client.emit("guildMemberAdd", member);

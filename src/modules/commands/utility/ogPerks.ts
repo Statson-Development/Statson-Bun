@@ -42,9 +42,7 @@ export default commandModule({
     }
 
     // Adding og roles.
-    await (interaction.member as GuildMember).roles.add(
-      config.ids.roles.statville_og_member
-    );
+    await interaction.member.roles.add(config.ids.roles.statville_og_member);
 
     // Adding money.
     await userModel.findOneAndUpdate(

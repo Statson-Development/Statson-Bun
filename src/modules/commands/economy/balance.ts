@@ -18,7 +18,7 @@ export default commandModule({
   ],
   execute: async (interaction) => {
     const member = (interaction.options.getMember("user") ||
-      interaction.member) as GuildMember;
+      interaction.member);
 
     // Fetching the user from db.
     const userDoc = await userModel.findOne({
