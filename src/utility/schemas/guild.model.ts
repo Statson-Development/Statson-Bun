@@ -20,6 +20,12 @@ export class GuildOptions {
     ],
   })
   newMemberRoles!: Array<string>;
+
+  @prop({
+    required: false,
+    type: String,
+  })
+  memberCountChannelId?: string;
 }
 
 @modelOptions({

@@ -1,5 +1,5 @@
-import includedPluginDefaultResponses from "#utility/templates/other/IncludedPluginDefaultResponses";
 import { Bot } from "neos-handler";
+import includedPluginDefaultResponses from "#utility/templates/other/IncludedPluginDefaultResponses";
 
 const bot = await Bot.new({
   clientOptions: {
@@ -7,6 +7,7 @@ const bot = await Bot.new({
   },
   moduleDirs: {
     commands: "src/modules/commands",
+    components: "src/modules/components",
     events: "src/modules/events",
     services: "src/modules/services",
   },

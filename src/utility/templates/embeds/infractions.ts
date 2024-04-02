@@ -1,21 +1,27 @@
-import capitalizeFirstLetter from "#utility/functions/formatting/capitalizeFirstLetter";
 import dateToUnixSeconds from "#utility/functions/formatting/dateToUnixSeconds";
+import capitalizeFirstLetter from "#utility/functions/formatting/capitalizeFirstLetter";
 import infractionModel, {
   Infraction,
   type OmitLogLinkInfraction,
 } from "#utility/schemas/infraction.model";
-import { GuildMember } from "discord.js";
+import config from "#config";
 import EmbedBuilder from "./default";
+import { GuildMember } from "discord.js";
+import timeAgo from "#utility/functions/formatting/timeAgo";
 
 /**
  * The embed to be sent when an infraction is changed.
  */
 function newInfractionChangePunishmentEmbed(
-  affectedMember: GuildMember,
-  infraction: Infraction
+  infraction: Infraction,
+  infractionMember?: GuildMember
 ) {
-  return new EmbedBuilder(affectedMember).setDescription(
-    `${Bun.env.INFO_EMOJI} - ${affectedMember}'s infraction punishment has been changed to a \`${infraction.punishment}\``
+  return new EmbedBuilder(infractionMember).setDescription(
+    `${config.emojis.info} - <@${
+      infraction.userId
+    }>'s infraction punishment has been changed to \`${
+      infraction.punishment?.penalty || "None"
+    }\``
   );
 }
 
@@ -24,8 +30,8 @@ function newInfractionChangePunishmentEmbed(
  * This embed is meant to only be viewable by staff.
  */
 async function newInfractionLogEmbed(
-  affectedMember: GuildMember,
-  infraction: OmitLogLinkInfraction
+  infraction: OmitLogLinkInfraction,
+  affectedMember?: GuildMember
 ): Promise<EmbedBuilder> {
   // Creating the embed
   const embed = new EmbedBuilder(affectedMember);
@@ -35,21 +41,28 @@ async function newInfractionLogEmbed(
     userId: infraction.userId,
   });
 
+  const capitalizedPenalty = infraction.punishment?.penalty
+    ? capitalizeFirstLetter(infraction.punishment.penalty)
+    : undefined;
+
+  let previousInfractionDisplay =
+    previousInfractions.map(
+      (infraction) =>
+        `\n\`🔗\` – [\`${timeAgo(infraction.createdAt!)} - ${
+          infraction.reason
+        }\`](%%${infraction.logLink}%%)`
+    ) || [];
+
+  // Ensuring field is not to long.
+  while (previousInfractionDisplay.join("").length > 1024) {
+    previousInfractionDisplay.pop();
+  }
+
   // Setting all fields.
   embed
-    .setThumbnail(affectedMember.displayAvatarURL())
-    .setAuthor({
-      name: `${affectedMember.displayName} Has Been ${
-        infraction.punishment?.penalty
-          ? capitalizeFirstLetter(infraction.punishment.penalty)
-          : "Warn"
-      }ed`,
-      iconURL: affectedMember.displayAvatarURL(),
-    })
     .setFooter({
-      text: infraction._id.toString(),
-      iconURL:
-        "https://whatemoji.org/wp-content/uploads/2020/07/Id-Button-Emoji.png",
+      text: `%%${infraction._id.toString()}%%`, // %% to stop any number formatting.
+      iconURL: config.urls.images.id,
     })
     .addFields(
       {
@@ -64,12 +77,21 @@ async function newInfractionLogEmbed(
       },
       {
         name: "Punishment",
-        value: `\`${infraction.punishment || "None"}\``,
+        value: `\`${
+          infraction.punishment?.penalty
+            ? capitalizedPenalty +
+              `${
+                infraction.punishment.humanReadableDuration
+                  ? ` (${infraction.punishment.humanReadableDuration})`
+                  : ""
+              }`
+            : "None"
+        }\``,
         inline: true,
       },
       {
         name: "Reason",
-        value: `\`${infraction.reason || "No reason provided."}\``,
+        value: `\`${infraction.reason}\``,
         inline: true,
       },
       {
@@ -78,47 +100,138 @@ async function newInfractionLogEmbed(
         inline: true,
       },
       {
-        name: "Notes",
-        value: `\`\`\`${infraction.notes || "No notes provided."}\`\`\``,
+        name: "Mod Notes",
+        value: `\`\`\`${infraction.modNotes || "No notes provided."}\`\`\``,
+      },
+      {
+        name: "Public Notes",
+        value: `\`\`\`${infraction.publicNotes || "No notes provided."}\`\`\``,
       },
       {
         name: "Moderator",
         value: `<@${infraction.modId}>`,
+        inline: true,
+      },
+      {
+        name: "Related Message",
+        value: `%%${infraction.relatedMessageLink}%%`, // %% to avoid auto formatting.
+        inline: true,
       },
       {
         name: "Previous Infractions",
         value:
-          previousInfractions
-            .map(
-              (infraction) =>
-                `\n\`🔗\` – [<t:${dateToUnixSeconds(
-                  infraction.createdAt!
-                  // Putting the link inside of "%%" so that it dosent get formatted.
-                )}:R>](%%${infraction.logLink}%%)`
-            )
-            .join("") || "N/A",
-        inline: true,
+          previousInfractionDisplay.length === 0
+            ? "None"
+            : previousInfractionDisplay.join(""),
       }
-      // {
-      //   name: "Historical Punishments",
-      //   value: infraction.historicalPunishments?.map().join()
-      // }
     );
 
+  if (affectedMember) {
+    embed.setThumbnail(affectedMember.displayAvatarURL()).setAuthor({
+      name: `${affectedMember.displayName} Has Been ${
+        infraction.punishment?.penalty ? capitalizedPenalty : "Warn"
+      }ed`,
+      iconURL: affectedMember.displayAvatarURL(),
+    });
+  }
+
   return embed;
+}
+
+function successfulInfractionAdministered(id: string, member?: GuildMember) {
+  return new EmbedBuilder(member)
+    .setTitle("Infraction Administered")
+    .setDescription(
+      `\`✅\` - Successfully administered infraction to ${member}.`
+    )
+    .setFooter({
+      text: id,
+      iconURL: config.urls.images.id,
+    });
 }
 
 /**
  * Converts an infraction to a discord.js embed.
  * This embed is meant to be viewable my members.
  */
-function newPublicInfractionEmbed() {}
+function newPublicInfractionEmbed(
+  infraction: Infraction,
+  affectedMember?: GuildMember
+) {
+  // Creating the embed.
+  const embed = new EmbedBuilder(affectedMember);
 
-function newInfractionAdministered(member: GuildMember) {}
+  const capitalizedPenalty = infraction.punishment?.penalty
+    ? capitalizeFirstLetter(infraction.punishment.penalty)
+    : undefined;
+
+  // Setting all fields.
+  embed
+    .setFooter({
+      text: `%%${infraction._id.toString()}%%`, // %% to stop any number formatting.
+      iconURL: config.urls.images.id,
+    })
+    .addFields(
+      {
+        name: "Member",
+        value: `<@${infraction.userId}>`,
+        inline: true,
+      },
+      {
+        name: "Channel",
+        value: `<#${infraction.channelId}>`,
+        inline: true,
+      },
+      {
+        name: "Punishment",
+        value: `\`${
+          infraction.punishment?.penalty
+            ? capitalizedPenalty +
+              `${
+                infraction.punishment.humanReadableDuration
+                  ? ` (${infraction.punishment.humanReadableDuration})`
+                  : ""
+              }`
+            : "None"
+        }\``,
+        inline: true,
+      },
+      {
+        name: "Reason",
+        value: `\`${infraction.reason}\``,
+        inline: true,
+      },
+      {
+        name: "Date",
+        value: `<t:${dateToUnixSeconds(infraction.createdAt!)}>`,
+        inline: true,
+      },
+      {
+        name: "Public Notes",
+        value: `\`\`\`${infraction.publicNotes || "No notes provided."}\`\`\``,
+      }
+      // todo:
+      // {
+      //   name: "Historical Punishments",
+      //   value: infraction.historicalPunishments?.map().join()
+      // }
+    );
+
+  if (affectedMember) {
+    embed.setThumbnail(affectedMember.displayAvatarURL()).setAuthor({
+      name: `You Have Been ${
+        infraction.punishment?.penalty ? capitalizedPenalty : "Warn"
+      }ed`,
+      iconURL: affectedMember.displayAvatarURL(),
+    });
+  }
+
+  return embed;
+}
 
 export default {
-  newInfractionAdministered,
   newInfractionChangePunishmentEmbed,
   newInfractionLogEmbed,
   newPublicInfractionEmbed,
+  successfulInfractionAdministered,
 };

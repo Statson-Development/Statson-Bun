@@ -1,16 +1,13 @@
-import {
-  type DocumentType,
-  getModelForClass,
-  modelOptions,
-  prop,
-} from "@typegoose/typegoose";
-import type { GuildMember } from "discord.js";
-import { InfractionPunishment } from "src/typescript/enums/InfractionPunishment";
-import { discordId } from "./types/discordId";
+import config from "#config";
 import { Bot } from "neos-handler";
-import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
 import type { Types } from "mongoose";
+import { Container } from "neos-container";
+import { discordId } from "./types/discordId";
 import { discordLink } from "./types/discordLink";
+import type { Guild, GuildMember } from "discord.js";
+import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
+import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
+import { InfractionPunishment } from "src/typescript/enums/InfractionPunishment";
 
 @modelOptions({
   schemaOptions: {
@@ -23,7 +20,6 @@ export class Punishment {
     required: true,
     type: String,
     enum: InfractionPunishment,
-    immutable: true,
   })
   penalty!: InfractionPunishment;
 
@@ -32,11 +28,16 @@ export class Punishment {
    * Only applicable to temporary punishments.
    */
   @prop({
-    required: true,
-    type: Date,
-    immutable: true,
+    required: false,
+    type: Number,
   })
   duration?: number;
+
+  @prop({
+    required: false,
+    type: String,
+  })
+  humanReadableDuration?: string;
 }
 
 export class HistoricalPunishment extends Punishment {
@@ -54,12 +55,9 @@ export class HistoricalPunishment extends Punishment {
   @prop({
     ...discordId,
     unique: false,
-    index:false,
+    index: false,
   })
   changedById!: string;
-
-  @prop(discordLink)
-  logLink!: string;
 }
 
 @modelOptions({
@@ -98,9 +96,9 @@ export class Infraction extends TimeStamps {
   @prop({
     required: true,
     type: String,
-    default: "No reason provided."
+    default: "No reason provided.",
   })
-  reason?: string;
+  reason!: string;
 
   @prop(discordLink)
   relatedMessageLink?: string;
@@ -116,7 +114,14 @@ export class Infraction extends TimeStamps {
     type: String,
     maxlength: 1024, // To align with discords embed field char limit.
   })
-  notes?: string;
+  publicNotes?: string;
+
+  @prop({
+    required: false,
+    type: String,
+    maxlength: 1024, // To align with discords embed field char limit.
+  })
+  modNotes?: string;
 
   @prop({
     required: false,
@@ -134,7 +139,7 @@ export default infractionModel;
 /**
  * The data that the punishment distributor requires.
  */
-export interface PunishmentDistributorData  {
+export interface PunishmentDistributorData {
   reason: string;
   userId: string;
   punishment: Punishment | null;
@@ -159,9 +164,7 @@ export interface PunishmentDistributorData  {
  * await pd.administerPunishment(interaction.member)
  */
 export class PunishmentDistributor {
-  constructor(
-    private data: PunishmentDistributorData
-  ) {}
+  constructor(private data: PunishmentDistributorData) {}
 
   // ------------------------ Public Methods ------------------------ //
 
@@ -178,44 +181,54 @@ export class PunishmentDistributor {
    *
    * @param member - The member to inherit and assign the punishment to. If not specified the method will resolve the member.
    */
-  public async changePunishment(member?: GuildMember) {
+  public async changePunishment(guildId: string) {
     // Removing the old punishment.
-    await this.removePunishment(member);
+    await this.removePunishment(guildId);
 
     // Administering the new punishment.
-    await this.administerPunishment(member);
+    await this.administerPunishment(guildId);
   }
 
   /**
    * Removes any administered punishments.
    * @param member - The member to inherit and assign the punishment to. If not specified the method will resolve the member.
    */
-  public async removePunishment(member?: GuildMember) {
+  public async removePunishment(guild: Guild | string) {
     // Ensuring there is a penalty on the infraction.
     if (!this.data.punishment?.penalty) {
       return;
     }
 
-    // Ensuring member existence.
-    if (!member) {
-      member = await this.resolveMember(this.data.userId);
+    // Resolving the guild if need be.
+    if (typeof guild === "string") {
+      // Resolving the client.
+      const client = await Container.getInstance().resolve("@internal/client");
+
+      // Resolving the guild.
+      guild = await client.guilds.fetch(guild);
     }
 
     // Creating a switch statement to handle the punishment.
     switch (this.data.punishment.penalty) {
       case InfractionPunishment.Ban: {
-        await member.ban({
-          reason: this.data.reason,
-        });
+        await guild.bans.remove(
+          this.data.userId,
+          "User has served ban time associated with infraction."
+        );
         break;
       }
       case InfractionPunishment.Timeout: {
-        // Setting timeout to 0 to remove.
-        await member.timeout(0);
+        await guild.members.edit(this.data.userId, {
+          communicationDisabledUntil: null,
+        });
         break;
       }
       case InfractionPunishment.TempBan: {
-        // todo: this. We should call the unban scheduled function early.
+        // Resolving scheduler.
+        const scheduler = await Container.getInstance().resolve("scheduler");
+
+        // Calling the unban scheduled function early.
+        await scheduler.runTaskNow("unbanMember", this.data.userId);
         break;
       }
     }
@@ -233,7 +246,7 @@ export class PunishmentDistributor {
    *
    * This method could be changed to
    */
-  public async administerPunishment(member?: GuildMember, guildId?: string) {
+  public async administerPunishment(guild: Guild | string) {
     // Ensuring a punishment exists.
     if (!this.data.punishment) return;
 
@@ -245,102 +258,52 @@ export class PunishmentDistributor {
       throw new Error("Temporary punishments require a duration.");
     }
 
-    // Ensuring member existence.
-    if (!member) {
-      member = await this.resolveMember(this.data.userId);
+    // Resolving the guild if need be.
+    if (typeof guild === "string") {
+      // Resolving the client.
+      const client = await Container.getInstance().resolve("@internal/client");
 
-      // Ensuring existence.
-      if (!member) {
-        throw new Error("Member was not resolved.");
-      }
-    }
-
-    // Ensuring a duration is present if punishment is temporary (temp-ban/timeout).
-    if (
-      this.data.punishment &&
-      (this.data.punishment.penalty === InfractionPunishment.TempBan ||
-        this.data.punishment.penalty === InfractionPunishment.Timeout) &&
-      !this.data.punishment.duration
-    ) {
-      throw new Error(
-        "Punishment duration was not specified but punishment is temporary."
-      );
+      // Resolving the guild.
+      guild = await client.guilds.fetch(guild);
     }
 
     // Creating a switch statement to handle the punishment.
     switch (this.data.punishment.penalty) {
+      case InfractionPunishment.Ban:
       case InfractionPunishment.TempBan: {
-        // Banning.
-        await member.ban({
+        await guild.bans.create(this.data.userId, {
           reason: this.data.reason,
         });
 
-        // todo: Schedule a unban.
+        if (this.data.punishment.penalty === InfractionPunishment.TempBan) {
+          // Resolving scheduler.
+          const scheduler = await Container.getInstance().resolve("scheduler");
+
+          // Creating a new task for the unban.
+          await scheduler.newTask(
+            this.data.punishment.duration! / 1000, // Converting to seconds.
+            "unbanMember",
+            this.data.userId
+          );
+        }
         break;
       }
       case InfractionPunishment.Timeout: {
-        await member.timeout(
-          this.data.punishment.duration!,
-          this.data.reason
-        );
+        await guild.members.edit(this.data.userId, {
+          communicationDisabledUntil: new Date(
+            Date.now() + this.data.punishment.duration!
+          ),
+        });
         break;
       }
       case InfractionPunishment.Kick: {
-        await member.kick(this.data.reason);
-        break;
-      }
-      case InfractionPunishment.Ban: {
-        await member.ban({
-          reason: this.data.reason,
-        });
+        await guild.members.kick(this.data.userId, this.data.reason);
         break;
       }
     }
   }
 
   // -------------------- PRIVATE HELPERS -------------------- //
-
-  /**
-   * This method is used to resolve a userId from an infraction into a member.
-   * It will always try getting all information from cache before using the api.
-   *
-   * @param userId - The id to resolve from.
-   */
-  private async resolveMember(userId: string) {
-    // Resolving the client.
-    const client = await Bot.getInstance().container.resolve(
-      "@internal/client"
-    );
-
-    // Ensuring client existence.
-    if (!client) {
-      throw new Error("Cannot resolve client.");
-    }
-
-    // Resolving the guild.
-    let guild = client.guilds.cache.get(Bun.env.STATVILLE_GUILD_ID);
-
-    // Ensuring guild existence.
-    if (!guild) {
-      guild = await client.guilds.fetch(Bun.env.STATVILLE_GUILD_ID);
-    }
-
-    // Get member from the cache first so we avoid api usage.
-    let member = guild.members.cache.get(userId);
-
-    if (!member) {
-      // If its not found in the cache we will then fetch via the api.
-      try {
-        member = await guild.members.fetch(userId);
-      } catch (error) {
-        // Handle possible errors from member fetching
-        throw new Error(`Could not resolve member with ID ${userId}: ${error}`);
-      }
-    }
-
-    // Should now exist so we return it.
-    return member;
-  }
 
   /**
    * Determines if the punishment is temporary.

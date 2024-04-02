@@ -1,6 +1,7 @@
 import taskModel, { Task } from "#utility/schemas/task.model";
 import type { Awaitable } from "src/typescript/types/Awaitable";
 import getFutureTimestamp from "#utility/functions/helper/getFutureTimestamp";
+import type { Types } from "mongoose";
 
 /**
  * The Scheduler class provides a custom implementation of task scheduling, similar to Agenda.
@@ -14,6 +15,11 @@ export default class Scheduler {
    * A map of task presets that can be scheduled and executed by the Scheduler.
    */
   private taskPresets: Map<string, SchedulerTaskPreset>;
+  private timeouts: Map<Types.ObjectId, NodeJS.Timeout> = new Map();
+  /**
+   * Weather the tasks have been loaded yet.
+   */
+  private loadedTasks = false;
 
   /**
    * Initializes a new instance of the Scheduler class with the specified options.
@@ -28,6 +34,12 @@ export default class Scheduler {
    * Tasks that are overdue will be executed immediately.
    */
   public async loadTasks() {
+    if (this.loadedTasks) {
+      return;
+    } else {
+      this.loadedTasks = true;
+    }
+
     const tasks = await taskModel.find();
 
     for (const task of tasks) {
@@ -62,6 +74,7 @@ export default class Scheduler {
       throw new Error(`Task preset '${name}' does not exist.`);
     }
 
+    // Creating task and saving in db.
     const task = new taskModel({
       name,
       arguments: args,
@@ -70,7 +83,32 @@ export default class Scheduler {
 
     await task.save();
 
-    setTimeout(() => this.runTask(task, taskPreset), when * 1000);
+    // Running task in a timeout.
+    const timeout = setTimeout(() => this.runTask(task, taskPreset), when * 1000);
+
+    // Storing the task timeout.
+    this.timeouts.set(task._id, timeout);
+  }
+
+  public async runTaskNow(name: string, ...args: any[]) {
+    const task = await taskModel.findOne({ name, arguments: args });
+
+    if (!task) {
+      throw new Error(`Task with name ${name} and arguments ${args} does not exist.`);
+    }
+
+    const timeout = this.timeouts.get(task._id);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.timeouts.delete(task._id);
+    }
+
+    const taskPreset = this.taskPresets.get(name);
+    if (!taskPreset) {
+      throw new Error(`Task preset '${name}' does not exist.`);
+    }
+
+    await this.runTask(task, taskPreset);
   }
 
   /**
@@ -80,7 +118,7 @@ export default class Scheduler {
    */
   private async runTask(task: Task, taskPreset: SchedulerTaskPreset) {
     await taskPreset(...task.arguments);
-    await taskModel.deleteOne({ name: task.name });
+    await taskModel.deleteOne({ _id: '' });
   }
 }
 

@@ -1,3 +1,4 @@
+// todo: change to "ranChoice"
 /**
  * Selects a random item from an array.
  * Similar to the random function in Python.
