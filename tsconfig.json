@@ -30,6 +30,9 @@
       ],
       "#config": [
         "config.json"
+      ],
+      "#embed": [
+        "src/utility/templates/embeds/default.ts"
       ]
     }
   }
