@@ -24,6 +24,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
 
+    /* Aliases */
     "paths": {
       "#utility/*": [
         "src/utility/*"
