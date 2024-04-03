@@ -1,7 +1,17 @@
-import { getModelForClass, prop } from "@typegoose/typegoose";
+import {
+  Severity,
+  getModelForClass,
+  modelOptions,
+  prop,
+} from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
 import { Schema } from "mongoose";
 
+@modelOptions({
+  options: {
+    allowMixed: Severity.ALLOW,
+  },
+})
 export class Task extends TimeStamps {
   @prop({
     required: true,
