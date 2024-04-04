@@ -35,17 +35,20 @@ export default eventModule({
     // Returning if bot.
     if (member.user.bot) return;
 
-    // Sending the welcome message.
-    await welcomeMember(member);
+    // Executing all at once.
+    await Promise.all([
+      // Sending the welcome message.
+      await welcomeMember(member),
 
-    // Add roles.
-    await addRoles(member);
+      // Add roles.
+      await addRoles(member),
 
-    // Adding og member perks.
-    await addOgMemberPerks(member);
+      // Adding og member perks.
+      await addOgMemberPerks(member),
 
-    // Update the member count.
-    await updateMemberCount(member);
+      // Update the member count.
+      await updateMemberCount(member),
+    ]);
   },
 });
 
@@ -118,9 +121,9 @@ const listenerDuration = 300_000; // 5 minutes in milliseconds
 let resetTimer: NodeJS.Timeout | null = null; // Timer reference
 
 export async function welcomeMember(member: GuildMember) {
-  const generalChannel = await member.guild.channels.fetch(
+  const generalChannel = (await member.guild.channels.fetch(
     config.ids.channels.statville_general
-  ) as GuildTextBasedChannel;
+  )) as GuildTextBasedChannel;
 
   // Ensure the general channel exists.
   if (!generalChannel) return;
@@ -153,7 +156,7 @@ export async function welcomeMember(member: GuildMember) {
         const stars = userDoc?.stars ?? 0;
 
         // Note the star in the star cache.
-        starCache.set(message.author.id, {stars: stars + 1});
+        starCache.set(message.author.id, { stars: stars + 1 });
       });
     }
 
