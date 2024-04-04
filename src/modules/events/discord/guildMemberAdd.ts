@@ -1,15 +1,23 @@
 import {
   ChannelType,
+  MessageCollector,
   type GuildMember,
   type GuildTextBasedChannel,
 } from "discord.js";
+import config from "#config";
+import { eventModule } from "neos-handler";
 import Queuer from "#utility/classes/Queuer";
 import guildModel from "#utility/schemas/guild.model";
-import userModel from "#utility/schemas/user.model";
 import WelcomeEmbed from "#utility/templates/embeds/welcome";
-import { eventModule } from "neos-handler";
-import config from "#config";
+import userModel, { User } from "#utility/schemas/user.model";
+import { SyncableCache } from "#utility/classes/SyncableCache";
 import formatNumberAsShortString from "#utility/functions/formatting/formatNumberAsShortString";
+
+/**
+ * The cache for storing starred messages.
+ */
+const starCache = new SyncableCache<User>(userModel, (id) => ({ id }), "stars");
+starCache.setSyncThreshold(40); // Syncing to the database every 40 stars.
 
 /**
  * The queuer for the welcome message.
@@ -23,12 +31,12 @@ export default eventModule({
     // Returning if development mode.
     if (Bun.env.NODE_ENV === "development") return;
     // Returning if not Statville.
-    if (member.guild.id !== Bun.env.STATVILLE_GUILD_ID) return;
+    if (member.guild.id !== config.ids.guilds.statville) return;
     // Returning if bot.
     if (member.user.bot) return;
 
     // Sending the welcome message.
-    welcomeMember(member);
+    await welcomeMember(member);
 
     // Add roles.
     await addRoles(member);
@@ -103,34 +111,66 @@ async function addRoles(member: GuildMember) {
   }
 }
 
-export function welcomeMember(member: GuildMember) {
-  // Fetching general channel.
-  const generalChannel = member.guild.channels.cache.get(
+// Variables to keep track of the message collector and the last member join time.
+let welcomeCollector: MessageCollector | null = null;
+let lastMemberJoinTime = 0;
+const listenerDuration = 300_000; // 5 minutes in milliseconds
+let resetTimer: NodeJS.Timeout | null = null; // Timer reference
+
+export async function welcomeMember(member: GuildMember) {
+  const generalChannel = await member.guild.channels.fetch(
     config.ids.channels.statville_general
   ) as GuildTextBasedChannel;
 
-  // Returning if channel exists. We can skip this member welcome.
+  // Ensure the general channel exists.
   if (!generalChannel) return;
 
-  // Queuing the welcome message.
+  // Queue the welcome message to be sent in the general channel.
   queuer.addToQueue(async () => {
-    // Sending the welcome message.
     await generalChannel.send({
       content: member.toString(),
       embeds: [new WelcomeEmbed(member)],
     });
 
-    // Listening for welcomes.
-    generalChannel
-      .createMessageCollector({
-        time: 300_000,
+    // Update the time when the latest member joined.
+    lastMemberJoinTime = Date.now();
+
+    // Create a message collector if it doesn't exist.
+    if (!welcomeCollector) {
+      welcomeCollector = generalChannel.createMessageCollector({
         filter: (message) =>
           message.content.toLowerCase().includes("welcome") ||
           message.stickers.has(config.ids.stickers.statville_welcome),
-      })
-      .on("collect", async (message) => {
-        await message.react("🌟");
       });
+
+      welcomeCollector.on("collect", async (message) => {
+        // React to welcome messages with a star emoji.
+        await message.react("🌟");
+
+        // Fetching the current stars.
+        const userDoc = await starCache.get(message.author.id);
+
+        const stars = userDoc?.stars ?? 0;
+
+        // Note the star in the star cache.
+        starCache.set(message.author.id, {stars: stars + 1});
+      });
+    }
+
+    // Clear any existing reset timer.
+    if (resetTimer) {
+      clearTimeout(resetTimer);
+    }
+
+    // Set a new reset timer.
+    resetTimer = setTimeout(() => {
+      if (Date.now() - lastMemberJoinTime >= listenerDuration) {
+        if (welcomeCollector) {
+          welcomeCollector.stop();
+          welcomeCollector = null;
+        }
+      }
+    }, listenerDuration);
   });
 }
 

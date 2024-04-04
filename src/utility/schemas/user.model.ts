@@ -1,6 +1,6 @@
-import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
-import config from "#config"
+import config from "#config";
 import { discordId } from "#utility/schemas/types/discordId";
+import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 
 @modelOptions({
   schemaOptions: {
@@ -19,6 +19,17 @@ export class User {
     min: 0,
   })
   money!: number;
+
+  /**
+   * Amount of welcome stars the user has received.
+   */
+  @prop({
+    type: Number,
+    required: false,
+    default: 0,
+    min: 0,
+  })
+  stars?: number;
 
   /**
    * A simple check to determine if the member was og and if they received og perks yet.
