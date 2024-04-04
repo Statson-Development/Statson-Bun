@@ -114,7 +114,7 @@ async function newInfractionLogEmbed(
       },
       {
         name: "Related Message",
-        value: `%%${infraction.relatedMessageLink}%%`, // %% to avoid auto formatting.
+        value: infraction.relatedMessageLink ? `%%${infraction.relatedMessageLink}%%` : "\`Not Provided\`", // %% to avoid auto formatting.
         inline: true,
       },
       {
