@@ -14,11 +14,13 @@ import {
   type ModalActionRowComponentBuilder,
 } from "discord.js";
 import config from "#config";
+import timeAgo from "#utility/functions/formatting/timeAgo";
 import EmbedBuilder from "#utility/templates/embeds/default";
-import infractionModel from "#utility/schemas/infraction.model";
 import InfractionUtils from "#utility/wrappers/both/infractions";
+import PaginationHelper from "#utility/classes/PaginationHelper";
 import infractionEmbedUtils from "#utility/templates/embeds/infractions";
 import capitalize from "#utility/functions/formatting/capitalizeFirstLetter";
+import infractionModel, { Infraction } from "#utility/schemas/infraction.model";
 import convertHumanReadableTimeToMilliseconds from "#utility/functions/formatting/convertHumanReadableToMs";
 
 export default commandModule({
@@ -161,6 +163,19 @@ export default commandModule({
         },
       ],
     },
+    {
+      name: "list",
+      description: "Lists all infractions for a user 📜.",
+      type: ApplicationCommandOptionType.Subcommand,
+      options: [
+        {
+          name: "user",
+          description: "The user to list infractions for 🎯.",
+          type: ApplicationCommandOptionType.User,
+          required: true,
+        },
+      ],
+    },
   ],
   execute: async (interaction) => {
     switch (interaction.options.getSubcommand()) {
@@ -184,11 +199,12 @@ export default commandModule({
         }
 
         // Checking member exists.
-        if(!member) {
+        if (!member) {
           return interaction.reply({
-            content: "That member is not in this server and therefor cannot be given an infraction ❌.",
+            content:
+              "That member is not in this server and therefor cannot be given an infraction ❌.",
             ephemeral: true,
-          })
+          });
         }
 
         // Ensuring member is manageable.
@@ -272,7 +288,7 @@ export default commandModule({
             infractionEmbedUtils.successfulInfractionAdministered(
               infraction._id.toString(),
               member
-            )
+            ),
           ],
         });
         break;
@@ -462,6 +478,83 @@ export default commandModule({
         });
         break;
       }
+
+      case "list": {
+        const user = interaction.options.getUser("user")!;
+
+        // Fetching all infractions for the user.
+        const infractionDocs = await infractionModel.find({ userId: user.id });
+
+        // Checking some exist.
+        if (infractionDocs.length === 0) {
+          await interaction.reply({
+            content: `No infractions found for ${user} ❌.`,
+            ephemeral: true,
+          });
+        }
+
+        // Counting users infractions to categorize into a time.
+        const infractionCount = countRecentInfractions(infractionDocs);
+
+        // The list of previous infractions.
+        let previousInfractionDisplay =
+          infractionDocs.map(
+            (infraction) =>
+              `\n[\`🔗 – ${timeAgo(infraction.createdAt!)} - ${
+                infraction.reason
+              }\`](%%${infraction.logLink}%%)`
+          ) || [];
+
+        // Ensuring field is not to long.
+        while (previousInfractionDisplay.join("").length > 1024) {
+          previousInfractionDisplay.pop();
+        }
+
+        // Creating the embeds.
+        const embeds = [
+          new EmbedBuilder()
+            .setAuthor({
+              name: `${user.displayName}'s Infractions`,
+              iconURL: user.displayAvatarURL(),
+            })
+            .addFields(
+              {
+                name: "Last 24 Hours",
+                value: `${infractionCount.last24Hours} infractions`,
+                inline: true,
+              },
+              {
+                name: "Last 7 Days",
+                value: `${infractionCount.last7Days} infractions`,
+                inline: true,
+              },
+              {
+                name: "All Time",
+                value: `${infractionCount.total} infractions`,
+                inline: true,
+              },
+              {
+                name: "Infraction List",
+                value:
+                  previousInfractionDisplay.length === 0
+                    ? "None"
+                    : previousInfractionDisplay.join(""),
+              }
+            ),
+          ...infractionDocs.map((infraction) =>
+            infractionEmbedUtils.newInfractionLogEmbed(infraction)
+          ),
+        ];
+
+        // Ensuring all promises have resolved (the create infraction function is promise based).
+        await Promise.all(embeds);
+
+        await new PaginationHelper(
+          interaction,
+          embeds as EmbedBuilder[]
+        ).paginate();
+        break;
+      }
     }
   },
 });
@@ -561,4 +654,33 @@ async function fetchReasons(input: string) {
   }
 
   return filteredReasons.slice(0, 25).map((r) => ({ name: r, value: r }));
+}
+
+function countRecentInfractions(infractions: Array<Infraction>) {
+  const now = new Date().getTime();
+
+  let last24HoursCount = 0;
+  let last7DaysCount = 0;
+  let totalCount = infractions.length;
+
+  for (let infraction of infractions) {
+    const activityDate = infraction.createdAt!.getTime();
+    const timeDiff = now - activityDate;
+    const timeDiffInHours = timeDiff / (1000 * 60 * 60);
+    const timeDiffInDays = timeDiffInHours / 24;
+
+    if (timeDiffInHours <= 24) {
+      last24HoursCount++;
+    }
+
+    if (timeDiffInDays <= 7) {
+      last7DaysCount++;
+    }
+  }
+
+  return {
+    last24Hours: last24HoursCount,
+    last7Days: last7DaysCount,
+    total: totalCount,
+  };
 }
