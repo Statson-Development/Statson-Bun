@@ -10,9 +10,12 @@ import { type GuildMember } from "discord.js";
 import type { DocumentType } from "@typegoose/typegoose";
 import InfractionEmbeds from "#utility/templates/embeds/infractions";
 import extractIdFromDLink from "#utility/functions/helper/exractIdFromDLink";
-import { requiredPermissionsMap } from "../../../typescript/enums/InfractionPunishment";
 import capitalizeFirstLetter from "#utility/functions/formatting/capitalizeFirstLetter";
 import authorizeInfractionPunishment from "#utility/templates/buttons/authorizeInfractionPunishment";
+import {
+  InfractionPunishment,
+  requiredPermissionsMap,
+} from "../../../typescript/enums/InfractionPunishment";
 
 // ---------------------------------------------------------
 // | The purpose of these wrappers are to administer       |
@@ -143,6 +146,13 @@ async function administerInfraction(data: {
     });
 
     await punishmentDistributor.administerPunishment(modMember.guild);
+  } else if (
+    (infraction.punishment?.penalty === InfractionPunishment.Ban ||
+      infraction.punishment?.penalty === InfractionPunishment.TempBan) &&
+    !modMember.permissions.has("BanMembers")
+  ) {
+    // Timeouting member for 24 hours while waiting for approval.
+    await infractionMember.timeout(24 * 60 * 60 * 1000, "Pending Ban Approval");
   }
 
   // Logging the infraction.
