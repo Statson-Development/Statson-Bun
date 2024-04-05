@@ -23,7 +23,7 @@ export default commandModule({
     await interaction.reply(
       `There are \`${interaction.client.listenerCount(
         listener
-      )}\` listeners on the \`${listener}\` listener.`
+      )}\` listeners on the \`${listener}\` event.`
     );
   },
 });
