@@ -8,6 +8,7 @@ import config from "#config";
 import EmbedBuilder from "./default";
 import { GuildMember } from "discord.js";
 import timeAgo from "#utility/functions/formatting/timeAgo";
+import { InfractionPunishment } from "src/typescript/enums/InfractionPunishment";
 
 /**
  * The embed to be sent when an infraction is changed.
@@ -114,7 +115,9 @@ async function newInfractionLogEmbed(
       },
       {
         name: "Related Message",
-        value: infraction.relatedMessageLink ? `%%${infraction.relatedMessageLink}%%` : "\`Not Provided\`", // %% to avoid auto formatting.
+        value: infraction.relatedMessageLink
+          ? `%%${infraction.relatedMessageLink}%%`
+          : "`Not Provided`", // %% to avoid auto formatting.
         inline: true,
       },
       {
@@ -156,7 +159,8 @@ function successfulInfractionAdministered(id: string, member?: GuildMember) {
  */
 function newPublicInfractionEmbed(
   infraction: Infraction,
-  affectedMember?: GuildMember
+  affectedMember?: GuildMember,
+  modMember?: GuildMember
 ) {
   // Creating the embed.
   const embed = new EmbedBuilder(affectedMember);
@@ -164,6 +168,27 @@ function newPublicInfractionEmbed(
   const capitalizedPenalty = infraction.punishment?.penalty
     ? capitalizeFirstLetter(infraction.punishment.penalty)
     : undefined;
+
+  // Creating punishment string.
+  let punishment = `\`${
+    infraction.punishment?.penalty ? capitalizedPenalty : "None"
+  }`;
+
+  if (infraction.punishment?.penalty) {
+    if (infraction.punishment.humanReadableDuration) {
+      punishment += ` (${infraction.punishment.humanReadableDuration})`;
+    }
+    if (
+      modMember &&
+      (infraction.punishment.penalty === InfractionPunishment.Ban ||
+        infraction.punishment.penalty === InfractionPunishment.TempBan) &&
+      !modMember.permissions.has("BanMembers")
+    ) {
+      punishment += " - (pending approval)";
+    }
+  }
+
+  punishment += "`";
 
   // Setting all fields.
   embed
@@ -184,16 +209,7 @@ function newPublicInfractionEmbed(
       },
       {
         name: "Punishment",
-        value: `\`${
-          infraction.punishment?.penalty
-            ? capitalizedPenalty +
-              `${
-                infraction.punishment.humanReadableDuration
-                  ? ` (${infraction.punishment.humanReadableDuration})`
-                  : ""
-              }`
-            : "None"
-        }\``,
+        value: punishment,
         inline: true,
       },
       {

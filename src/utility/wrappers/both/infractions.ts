@@ -177,7 +177,8 @@ async function administerInfraction(data: {
     embeds: [
       InfractionEmbeds.newPublicInfractionEmbed(
         infractionDoc,
-        infractionMember
+        infractionMember,
+        modMember
       ),
     ],
   });
