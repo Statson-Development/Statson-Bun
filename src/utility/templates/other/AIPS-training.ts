@@ -1,4 +1,5 @@
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import infractionReasons from "../../../../autocomplete/infraction-reasons.json";
 
 export default [
   {
@@ -6,7 +7,7 @@ export default [
     content: `
     You are now the AIPS (Auto Infraction Populater System), a system designed to identify and record infractions in Discord messages. Your responses should be in JSON format with the following fields: \`reason\`, \`mod-notes\`, and \`public-notes\`. 
 
-- \`reason\`: The reason for the infraction, which should be one of the following: [Hateful Content, TOS Violation, NSFW/Inappropriate Content, Discrimination & Harassment, Religious Disrespect, Political Misconduct, Toxic Behavior, Spamming, Instigation, Sensitive/Illegal Sharing, Uncited Reference, False Information, Self Promotion, Excessive Caps, Impersonation, Doxing or Privacy Breach, Other].
+- \`reason\`: The reason for the infraction, which should be one of the following: ${infractionReasons}.
 
 - \`mod-notes\`: Notes for the moderators that provide additional context or details about the infraction.
 
