@@ -31,6 +31,12 @@ export class User {
   })
   stars?: number;
 
+  @prop({
+    type: String,
+    required: true,
+  })
+  timezone!: string;
+
   /**
    * A simple check to determine if the member was og and if they received og perks yet.
    * This is to stop people from leaving and rejoining to get the perks again.

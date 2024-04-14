@@ -1,10 +1,10 @@
-import timezoneModel from "#utility/schemas/timezone.model";
 import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
 } from "discord.js";
 import { commandModule } from "neos-handler";
 import moment from "moment-timezone";
+import userModel from "#utility/schemas/user.model.js";
 
 export default commandModule({
   name: "timestamp",
@@ -32,20 +32,22 @@ export default commandModule({
     {
       name: "time",
       type: ApplicationCommandOptionType.String,
-      description: "The time for precision down to the second, in 12 or 24-hour format ⏰.",
+      description:
+        "The time for precision down to the second, in 12 or 24-hour format ⏰.",
       required: false,
     },
   ],
   execute: async (interaction) => {
     // Fetching user's timezone from the database.
-    const timeDoc = await timezoneModel.findOne({
-      userId: interaction.user.id,
+    const timeDoc = await userModel.findOne({
+      id: interaction.user.id,
     });
 
     // Ensuring timezone exists.
     if (!timeDoc) {
       return interaction.reply({
-        content: "Please set your timezone first using the `/time set` command ⏳.",
+        content:
+          "Please set your timezone first using the `/time set` command ⏳.",
         ephemeral: true,
       });
     }
@@ -63,19 +65,42 @@ export default commandModule({
 
     // Check if the month is numeric and convert it to a month name if necessary
     if (!isNaN(parseInt(month))) {
-      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
       month = months[parseInt(month) - 1]; // Convert numeric month to its name
     }
 
     // Attempt to parse the provided time using multiple formats
-    const formats = ["YYYY-MMMM-DD HH:mm", "YYYY-MMMM-DD h:mm A", "YYYY-MMMM-DD hA"];
+    const formats = [
+      "YYYY-MMMM-DD HH:mm",
+      "YYYY-MMMM-DD h:mm A",
+      "YYYY-MMMM-DD hA",
+    ];
     const userTimezone = timeDoc.timezone;
-    let dateTime = moment.tz(`${year}-${month}-${date} ${time}`, formats, true, userTimezone);
+    let dateTime = moment.tz(
+      `${year}-${month}-${date} ${time}`,
+      formats,
+      true,
+      userTimezone
+    );
 
     // Ensuring the date and time are valid.
     if (!dateTime.isValid()) {
       return interaction.reply({
-        content: "Invalid date or time provided. Please check your inputs and try again 🚫.",
+        content:
+          "Invalid date or time provided. Please check your inputs and try again 🚫.",
         ephemeral: true,
       });
     }
