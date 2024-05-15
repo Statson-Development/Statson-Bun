@@ -10,6 +10,7 @@ import type {
 import type MongoClient from "#utility/classes/MongoClient.js";
 import type Scheduler from "#utility/classes/Scheduler";
 import type OpenAI from "openai";
+import type { UserNeo4jClient } from "#utility/classes/UserNeo4jClient.js";
 
 export interface ServiceMapBase {
   "@internal/client": Client;
@@ -19,6 +20,7 @@ export interface ServiceMapBase {
   "@internal/logger": LoggerLike;
   scheduler: Scheduler;
   mongoClient: MongoClient;
+  neo4jClient: UserNeo4jClient;
   openai: OpenAI;
 }
 

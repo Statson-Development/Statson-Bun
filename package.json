@@ -22,6 +22,7 @@
     "discord.js": "^14.14.1",
     "moment-timezone": "^0.5.45",
     "mongoose": "^8.1.1",
+    "neo4j-driver": "^5.19.0",
     "neos-handler": "3.7.1",
     "openai": "^4.29.0"
   },

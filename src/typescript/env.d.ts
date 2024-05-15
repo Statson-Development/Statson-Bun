@@ -9,6 +9,9 @@ declare global {
       DISCORD_TOKEN: string;
       // MongoDB.
       MONGO_URI: string;
+      // Neo4j.
+      NEO4J_URI: string;
+      NEO4J_USERS_PASSWORD: string;
     }
   }
 }
