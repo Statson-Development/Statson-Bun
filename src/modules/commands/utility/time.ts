@@ -1,7 +1,10 @@
-import timeModel, { Timezone } from "#utility/schemas/timezone.model";
-import { ApplicationCommandOptionType, ApplicationCommandType } from "discord.js";
+import {
+  ApplicationCommandOptionType,
+  ApplicationCommandType,
+} from "discord.js";
 import { commandModule } from "neos-handler";
 import timezones from "../../../../autocomplete/timezones.json";
+import userModel, { User } from "#utility/schemas/user.model.js";
 
 export default commandModule({
   name: "time",
@@ -56,9 +59,9 @@ export default commandModule({
         const timezone = interaction.options.getString("timezone")!;
 
         // Updating in db.
-        await timeModel.findOneAndUpdate(
+        await userModel.findOneAndUpdate(
           {
-            userId: interaction.user.id,
+            id: interaction.user.id,
           },
           {
             timezone,
@@ -80,7 +83,7 @@ export default commandModule({
         const user = interaction.options.getUser("user") || interaction.user;
 
         // Fetching their timezone from db.
-        const timezoneDoc = await timeModel.findOne({ userId: user.id });
+        const timezoneDoc = await userModel.findOne({ id: user.id });
 
         // Checking if existence.
         if (!timezoneDoc) {
@@ -108,7 +111,7 @@ export default commandModule({
       }
       case "delete": {
         // Deleting from the database.
-        await timeModel.deleteOne({ userId: interaction.user.id });
+        await userModel.deleteOne({ id: interaction.user.id });
 
         await interaction.reply({
           content: "I have deleted your timezone from my database.",
@@ -136,7 +139,7 @@ async function getRelatedTimezone(s: string) {
 /**
  * Takes a timezone db doc and converts it to a timestamp readable by discord.
  */
-function extractTimezoneData(timezoneDoc: Timezone): {
+function extractTimezoneData(userDoc: User): {
   timestamp: string;
   timezone: string;
 } {
@@ -144,10 +147,10 @@ function extractTimezoneData(timezoneDoc: Timezone): {
   const etcPattern = /^Etc\/GMT([+-]\d+)$/i;
 
   // Attempt to match the timezone against the regular expression
-  const match = timezoneDoc.timezone.match(etcPattern);
+  const match = userDoc.timezone.match(etcPattern);
 
   // Initialize the adjustedTimezone with the original timezone from the document
-  let adjustedTimezone = timezoneDoc.timezone;
+  let adjustedTimezone = userDoc.timezone;
 
   // If the timezone matches the Etc/GMT pattern, adjust the offset sign
   if (match) {

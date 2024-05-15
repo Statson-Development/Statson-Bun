@@ -4,6 +4,7 @@ import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 
 @modelOptions({
   schemaOptions: {
+    _id: false,
     timestamps: true,
     versionKey: false,
   },
@@ -30,6 +31,12 @@ export class User {
     min: 0,
   })
   stars?: number;
+
+  @prop({
+    type: String,
+    required: true,
+  })
+  timezone!: string;
 
   /**
    * A simple check to determine if the member was og and if they received og perks yet.
