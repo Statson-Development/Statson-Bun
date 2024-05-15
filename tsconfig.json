@@ -17,6 +17,7 @@
     /* Linting */
     "skipLibCheck": true,
     "strict": true,
+    "strictPropertyInitialization": false,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
 
