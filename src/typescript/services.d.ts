@@ -7,7 +7,7 @@ import type {
   CooldownManager,
   LoggerLike,
 } from "neos-handler";
-import type MongoClient from "#utility/classes/MongoClient";
+import type MongoClient from "#utility/classes/MongoClient.js";
 import type Scheduler from "#utility/classes/Scheduler";
 import type OpenAI from "openai";
 
@@ -18,7 +18,7 @@ export interface ServiceMapBase {
   "@internal/cooldownManager": CooldownManager;
   "@internal/logger": LoggerLike;
   scheduler: Scheduler;
-  database: MongoClient;
+  mongoClient: MongoClient;
   openai: OpenAI;
 }
 

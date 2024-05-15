@@ -7,7 +7,7 @@ declare global {
       NODE_ENV: "development" | "production";
       // Discord.
       DISCORD_TOKEN: string;
-      // Database.
+      // MongoDB.
       MONGO_URI: string;
     }
   }
