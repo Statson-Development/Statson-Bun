@@ -1,5 +1,5 @@
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import infractionReasons from "../../../../autocomplete/infraction-reasons.json";
+import infractionReasons from "../../../../autocomplete/infraction-reasons.json"
 
 export default [
   {
